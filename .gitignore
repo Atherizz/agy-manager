@@ -1,0 +1,28 @@
+# Binary
+
+agym
+
+agym.exe
+
+*.exe
+
+  
+
+# IDE
+
+.idea/
+
+.vscode/
+
+*.swp
+
+  
+
+# OS
+
+.DS_Store
+
+Thumbs.db
+
+# Docs
+docs/
