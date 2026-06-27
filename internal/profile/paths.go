@@ -18,7 +18,6 @@ func DefaultGeminiRoot() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return filepath.Join(home, ".gemini"), nil
 }
 
@@ -34,12 +33,12 @@ func (p *PathResolver) StateFile() string {
 	return filepath.Join(p.geminiRoot, "profiles", "state.json")
 }
 
+// IsolatedFiles returns per-identity authentication files managed by agy.
 func (p *PathResolver) IsolatedFiles() []string {
-	// HANYA memindah file yang berkaitan dengan autentikasi / identitas login
 	return []string{"oauth_creds.json", "google_accounts.json", "state.json"}
 }
 
+// IsolatedDirs returns session cache directories (.pb files) managed per account by agy.
 func (p *PathResolver) IsolatedDirs() []string {
-	// KOSONG. Tidak ada folder yang dipindah, semua riwayat chat (brain) di-share.
-	return []string{}
+	return []string{filepath.Join("antigravity-cli", "implicit")}
 }

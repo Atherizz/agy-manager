@@ -1,140 +1,202 @@
-
 # agym — Antigravity Identity Manager
 
-  
+`agym` is a CLI tool for managing multiple Antigravity CLI accounts on a single machine. It works by swapping per-profile credentials in and out of the location that `agy` reads from — so switching accounts is one command, with no re-login required after the initial setup.
 
-Manage multiple Antigravity CLI profiles on one machine.
+---
 
-  
+## Requirements
+
+- Go 1.22+
+- Antigravity CLI (`agy`) installed
+- Windows (primary support)
+
+---
 
 ## Installation
 
-  
+Clone the repository and build the binary:
 
 ```bash
-
+git clone https://github.com/Atherizz/agy-manager
+cd agy-manager
 go build -o agym.exe .
-
-# Move agym.exe to a directory in your PATH
-
 ```
 
-  
+To run `agym` from anywhere without navigating to the project folder, copy the binary to a directory in your PATH:
 
-## Usage
+```powershell
+# Create a personal bin folder (if it doesn't exist)
+New-Item -ItemType Directory -Path "$env:USERPROFILE\bin" -Force
 
-  
+# Copy the binary
+Copy-Item ".\agym.exe" "$env:USERPROFILE\bin\agym.exe" -Force
+
+# Add to User PATH (run once)
+$currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+[Environment]::SetEnvironmentVariable("PATH", "$currentPath;$env:USERPROFILE\bin", "User")
+```
+
+Open a new terminal and verify:
 
 ```bash
+agym --help
+```
 
-# Create profiles
+When you rebuild after a code change, re-run the copy step:
 
-agym create personal
+```bash
+go build -o agym.exe .
+Copy-Item ".\agym.exe" "$env:USERPROFILE\bin\agym.exe" -Force
+```
 
-agym create work
+---
 
-  
+## Commands
 
-# Switch profile
+```
+agym create <name>    Create a new profile
+agym use <name>       Switch to a profile
+agym list             List all profiles (marks the active one)
+agym status           Show the currently active profile
+agym delete <name>    Delete a profile
+agym run <name> -- <cmd>   Run a command under a specific profile without switching
+agym version          Print version info
+```
 
-agym use work
+### Examples
 
-  
+```bash
+agym create user1
+agym create user2
 
-# Check active profile
+agym use user1
+agym list
 
 agym status
 
-  
+agym delete user2
 
-# List all profiles
-
-agym list
-
-  
-
-# Run a one-off command with a specific profile
-
-agym run personal -- agy
-
-  
-
-# Delete a profile
-
-agym delete personal
-
+agym run user1 -- agy
 ```
 
-  
+---
 
 ## How It Works
 
-  
+`agy` reads credentials from a fixed location: `~/.gemini/`. It has no built-in concept of multiple accounts.
 
-Each profile stores its own isolated copy of:
+`agym` works around this by keeping a vault per profile under `~/.gemini/profiles/<name>/`. When you switch profiles, it:
 
-- `oauth_creds.json` — authentication credentials
+1. **Stashes** the current credentials (files + Windows Credential Manager entry) into the active profile's vault
+2. **Loads** the target profile's credentials into `~/.gemini/`
+3. **Updates** `state.json` to record which profile is now active
 
-- `google_accounts.json` — linked accounts
+From `agy`'s perspective, it just sees valid credentials at the expected location — it never knows a swap happened.
 
-- `projects.json` — GCP project settings
+### What gets isolated per profile
 
-- `settings.json` — user preferences
+| Item | Location |
+|---|---|
+| OAuth token | `oauth_creds.json` |
+| Linked accounts | `google_accounts.json` |
+| Runtime state | `state.json` |
+| Session cache | `antigravity-cli/implicit/` |
+| Windows session | Credential Manager (`gemini:antigravity`) |
 
-- `state.json` — runtime state
+### What is shared across all profiles
 
-- `antigravity-cli/brain/` — conversation history
+- Plugins, skills, and built-in tools (`config/`, `builtin/`)
+- Conversation history (`antigravity-cli/brain/`)
+- Installation ID
+- Settings and trusted folders
 
-- `history/` — command history
+---
 
-  
+## Setting Up Multiple Accounts
 
-Global components are shared across all profiles:
+### First-time setup
 
-- `installation_id` — machine identifier
+**1. Create your profiles**
 
-- `trustedFolders.json` — trusted workspace folders
-
-- `config/plugins/` — installed plugins
-
-- `config/skills/` — installed skills
-
-- `builtin/` — built-in capabilities
-
-  
-
-## Architecture
-
-  
-
+```bash
+agym create user1
+agym create user2
 ```
 
-~/.gemini/
+**2. Clear existing credentials from Windows Credential Manager**
 
-├── profiles/
-
-│   ├── state.json          ← tracks active profile
-
-│   ├── personal/
-
-│   │   ├── oauth_creds.json
-
-│   │   ├── antigravity-cli/brain/
-
-│   │   └── ...
-
-│   └── work/
-
-│       ├── oauth_creds.json
-
-│       ├── antigravity-cli/brain/
-
-│       └── ...
-
-├── installation_id         ← shared
-
-├── config/                 ← shared
-
-└── oauth_creds.json        ← active profile's copy
-
+```bash
+cmdkey /delete:gemini:antigravity
 ```
+
+> If you see "CREDENTIAL_NOT_FOUND", that's fine — nothing was stored yet.
+
+**3. Set the starting profile**
+
+```powershell
+'{"active_profile":"user1"}' | Set-Content "$env:USERPROFILE\.gemini\profiles\state.json"
+```
+
+**4. Log in with the first account**
+
+```bash
+agy
+```
+
+Log in with your first account (e.g. `user1@gmail.com`), then exit with `/exit`.
+
+**5. Switch to the second profile and log in**
+
+```bash
+agym use user2
+agy
+```
+
+Log in with your second account (e.g. `user2@gmail.com`), then exit with `/exit`.
+
+That's it. The initial setup is done.
+
+---
+
+### Switching accounts (day-to-day)
+
+```bash
+agym use user1   # switch to first account
+agym use user2   # switch to second account
+```
+
+No logout or re-login needed.
+
+---
+
+### Adding more accounts later
+
+```bash
+agym create user3
+agym use user3
+agy
+# Log in with the new account, then /exit
+```
+
+---
+
+## Troubleshooting
+
+**Switching profile but `agy` still shows the same account**
+
+Check what's stored in the Credential Manager:
+
+```bash
+cmdkey /list | findstr gemini
+```
+
+You should see `gemini:antigravity:<profile-name>` entries for each profile that has been set up. If not, the initial setup (clearing with `cmdkey /delete` and re-logging in) may need to be repeated.
+
+**Resetting everything from scratch**
+
+```powershell
+cmdkey /delete:gemini:antigravity
+Remove-Item "$env:USERPROFILE\.gemini\profiles" -Recurse -Force
+```
+
+Then start the first-time setup from the beginning.
