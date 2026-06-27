@@ -23,7 +23,6 @@ func stashWindowsCred(profileName string) error {
 }
 
 // swapWindowsCred loads the credential for profileName from its profile-specific slot
-// into the main Windows Credential Manager entry.
 func swapWindowsCred(profileName string) error {
 	if existing, err := wincred.GetGenericCredential(credTarget); err == nil {
 		existing.Delete()
@@ -39,10 +38,47 @@ func swapWindowsCred(profileName string) error {
 }
 
 // DeleteWindowsCred completely removes a profile's stored credential from the Windows Credential Manager.
-// This should be called when deleting a profile to prevent dangling credentials.
 func DeleteWindowsCred(profileName string) error {
 	if cred, err := wincred.GetGenericCredential(credTarget + ":" + profileName); err == nil {
 		return cred.Delete()
 	}
 	return nil
+}
+
+// RenameWindowsCred copies a profile's credential to a new slot and deletes the old one.
+func RenameWindowsCred(oldName, newName string) error {
+	cred, err := wincred.GetGenericCredential(credTarget + ":" + oldName)
+	if err != nil {
+		return nil // nothing stored for this profile
+	}
+	newCred := wincred.NewGenericCredential(credTarget + ":" + newName)
+	newCred.CredentialBlob = cred.CredentialBlob
+	newCred.UserName = cred.UserName
+	if err := newCred.Write(); err != nil {
+		return err
+	}
+	return cred.Delete()
+}
+
+// HasWindowsCred returns true if the profile has a stored credential in Windows Credential Manager.
+func HasWindowsCred(profileName, activeProfile string) bool {
+	target := credTarget + ":" + profileName
+	if profileName == activeProfile {
+		target = credTarget
+	}
+	_, err := wincred.GetGenericCredential(target)
+	return err == nil
+}
+
+// GetAccountEmail returns the Google account email associated with a profile.
+func GetAccountEmail(profileName, activeProfile string) string {
+	target := credTarget + ":" + profileName
+	if profileName == activeProfile {
+		target = credTarget
+	}
+	cred, err := wincred.GetGenericCredential(target)
+	if err != nil {
+		return ""
+	}
+	return cred.UserName
 }

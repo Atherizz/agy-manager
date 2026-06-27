@@ -39,3 +39,10 @@ func Create(p *PathResolver, name string) error {
 	}
 	return nil
 }
+
+func Rename(p *PathResolver, oldName, newName string) error {
+	if err := os.Rename(p.ProfileDir(oldName), p.ProfileDir(newName)); err != nil {
+		return err
+	}
+	return RenameWindowsCred(oldName, newName)
+}
