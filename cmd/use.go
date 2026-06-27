@@ -9,13 +9,18 @@ import (
 )
 
 var useCmd = &cobra.Command{
-	Use:   "use <profile-name>",
+	Use:   "use [profile-name]",
 	Short: "Switch to a different profile",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		name := args[0]
 		root, _ := profile.DefaultGeminiRoot()
 		p := profile.NewPathResolver(root)
+
+		if len(args) == 0 {
+			return runInteractiveSelector(p)
+		}
+
+		name := args[0]
 		if !profile.Exists(p, name) {
 			return fmt.Errorf("%s Profile not found", errorStyle.Render("✗"))
 		}

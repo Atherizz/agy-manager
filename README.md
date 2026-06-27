@@ -66,17 +66,17 @@ agym version          Print version info
 ### Examples
 
 ```bash
-agym create user1
-agym create user2
+agym create profile1
+agym create profile2
 
-agym use user1
+agym use profile1
 agym list
 
 agym status
 
-agym delete user2
+agym delete profile2
 
-agym run user1 -- agy
+agym run profile1 -- agy
 ```
 
 ---
@@ -119,8 +119,8 @@ From `agy`'s perspective, it just sees valid credentials at the expected locatio
 **1. Create your profiles**
 
 ```bash
-agym create user1
-agym create user2
+agym create profile1
+agym create profile2
 ```
 
 **2. Clear existing credentials from Windows Credential Manager**
@@ -134,7 +134,7 @@ cmdkey /delete:gemini:antigravity
 **3. Set the starting profile**
 
 ```powershell
-'{"active_profile":"user1"}' | Set-Content "$env:USERPROFILE\.gemini\profiles\state.json"
+'{"active_profile":"profile1"}' | Set-Content "$env:USERPROFILE\.gemini\profiles\state.json"
 ```
 
 **4. Log in with the first account**
@@ -143,16 +143,16 @@ cmdkey /delete:gemini:antigravity
 agy
 ```
 
-Log in with your first account (e.g. `user1@gmail.com`), then exit with `/exit`.
+Log in with your first account (e.g. `profile1@gmail.com`), then exit with `/exit`.
 
 **5. Switch to the second profile and log in**
 
 ```bash
-agym use user2
+agym use profile2
 agy
 ```
 
-Log in with your second account (e.g. `user2@gmail.com`), then exit with `/exit`.
+Log in with your second account (e.g. `profile2@gmail.com`), then exit with `/exit`.
 
 That's it. The initial setup is done.
 
@@ -161,8 +161,8 @@ That's it. The initial setup is done.
 ### Switching accounts (day-to-day)
 
 ```bash
-agym use user1   # switch to first account
-agym use user2   # switch to second account
+agym use profile1   # switch to first account
+agym use profile2   # switch to second account
 ```
 
 No logout or re-login needed.
@@ -172,8 +172,8 @@ No logout or re-login needed.
 ### Adding more accounts later
 
 ```bash
-agym create user3
-agym use user3
+agym create profile3
+agym use profile3
 agy
 # Log in with the new account, then /exit
 ```
