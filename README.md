@@ -1,6 +1,6 @@
-# agym — Antigravity Identity Manager
+# agym - Antigravity Identity Manager
 
-`agym` is a CLI tool for managing multiple Antigravity CLI accounts on a single machine. It works by swapping per-profile credentials in and out of the location that `agy` reads from — so switching accounts is one command, with no re-login required after the initial setup.
+`agym` is a CLI tool for managing multiple Antigravity CLI accounts on a single machine. It works by swapping per-profile credentials in and out of the location that `agy` reads from, so switching accounts is one command, with no re-login required after the initial setup.
 
 ---
 
@@ -91,7 +91,7 @@ agym run user1 -- agy
 2. **Loads** the target profile's credentials into `~/.gemini/`
 3. **Updates** `state.json` to record which profile is now active
 
-From `agy`'s perspective, it just sees valid credentials at the expected location — it never knows a swap happened.
+From `agy`'s perspective, it just sees valid credentials at the expected location, it never knows a swap happened.
 
 ### What gets isolated per profile
 
@@ -129,7 +129,7 @@ agym create user2
 cmdkey /delete:gemini:antigravity
 ```
 
-> If you see "CREDENTIAL_NOT_FOUND", that's fine — nothing was stored yet.
+> If you see "CREDENTIAL_NOT_FOUND", that's fine, nothing was stored yet.
 
 **3. Set the starting profile**
 
@@ -200,3 +200,9 @@ Remove-Item "$env:USERPROFILE\.gemini\profiles" -Recurse -Force
 ```
 
 Then start the first-time setup from the beginning.
+
+---
+
+## Acknowledgements
+
+Inspired by [AntigravityManager](https://github.com/Draculabo/AntigravityManager) by Draculabo — a GUI-based account manager for Antigravity IDE. `agym` is a CLI-focused alternative built specifically for Antigravity CLI users.
