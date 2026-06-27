@@ -37,3 +37,12 @@ func swapWindowsCred(profileName string) error {
 	newCred.UserName = profileCred.UserName
 	return newCred.Write()
 }
+
+// DeleteWindowsCred completely removes a profile's stored credential from the Windows Credential Manager.
+// This should be called when deleting a profile to prevent dangling credentials.
+func DeleteWindowsCred(profileName string) error {
+	if cred, err := wincred.GetGenericCredential(credTarget + ":" + profileName); err == nil {
+		return cred.Delete()
+	}
+	return nil
+}

@@ -37,6 +37,7 @@ var deleteCmd = &cobra.Command{
 			}
 		}
 		os.RemoveAll(p.ProfileDir(name))
+		profile.DeleteWindowsCred(name)
 		fmt.Printf("%s Deleted %s\n", successStyle.Render("✓"), name)
 		return nil
 	},

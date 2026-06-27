@@ -26,6 +26,9 @@ func SwapToProfile(p *PathResolver, name string) error {
 	for _, f := range p.IsolatedFiles() {
 		os.Remove(filepath.Join(p.GeminiRoot(), f))
 	}
+	for _, d := range p.IsolatedDirs() {
+		os.RemoveAll(filepath.Join(p.GeminiRoot(), d))
+	}
 	for _, f := range p.IsolatedFiles() {
 		if err := copyIfExists(filepath.Join(p.ProfileDir(name), f), filepath.Join(p.GeminiRoot(), f)); err != nil {
 			return err
