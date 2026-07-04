@@ -2,7 +2,17 @@
 
 package profile
 
-import "github.com/danieljoos/wincred"
+import (
+	"encoding/json"
+
+	"github.com/danieljoos/wincred"
+)
+
+type oauthTokenBlob struct {
+	Token struct {
+		AccessToken string `json:"access_token"`
+	} `json:"token"`
+}
 
 const credTarget = "gemini:antigravity"
 
@@ -82,3 +92,21 @@ func GetAccountEmail(profileName, activeProfile string) string {
 	}
 	return cred.UserName
 }
+
+// GetAccessToken returns the OAuth2 access token for the given profile.
+func GetAccessToken(profileName, activeProfile string) string {
+	target := credTarget + ":" + profileName
+	if profileName == activeProfile {
+		target = credTarget
+	}
+	cred, err := wincred.GetGenericCredential(target)
+	if err != nil {
+		return ""
+	}
+	var blob oauthTokenBlob
+	if err := json.Unmarshal(cred.CredentialBlob, &blob); err != nil {
+		return ""
+	}
+	return blob.Token.AccessToken
+}
+
