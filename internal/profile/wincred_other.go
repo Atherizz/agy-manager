@@ -1,8 +1,8 @@
-//go:build !windows
+//go:build !windows && !darwin
 
 package profile
 
-// Stub untuk non-Windows (Linux/macOS).
+// Stubs for non-Windows, non-Darwin platforms (e.g. Linux).
 func stashWindowsCred(profileName string) error  { return nil }
 func swapWindowsCred(profileName string) error   { return nil }
 func DeleteWindowsCred(profileName string) error  { return nil }
