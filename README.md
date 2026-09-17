@@ -8,7 +8,7 @@
 
 - Go 1.22+
 - Antigravity CLI (`agy`) installed
-- Windows (primary support)
+- Windows or macOS
 
 ---
 
@@ -19,7 +19,7 @@ Clone the repository and build the binary:
 ```bash
 git clone https://github.com/Atherizz/agy-manager
 cd agy-manager
-go build -o agym.exe .
+go build -o agym.exe .   # on macOS: go build -o agym .
 ```
 
 To run `agym` from anywhere without navigating to the project folder, copy the binary to a directory in your PATH:
@@ -34,6 +34,12 @@ Copy-Item ".\agym.exe" "$env:USERPROFILE\bin\agym.exe" -Force
 # Add to User PATH (run once)
 $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$env:USERPROFILE\bin", "User")
+```
+
+On macOS:
+
+```bash
+cp agym ~/bin/agym   # ensure ~/bin is in your PATH
 ```
 
 Open a new terminal and verify:
@@ -87,7 +93,7 @@ agym run profile1 -- agy
 
 `agym` works around this by keeping a vault per profile under `~/.gemini/profiles/<name>/`. When you switch profiles, it:
 
-1. **Stashes** the current credentials (files + Windows Credential Manager entry) into the active profile's vault
+1. **Stashes** the current credentials (files + Windows Credential Manager / macOS Keychain entry) into the active profile's vault
 2. **Loads** the target profile's credentials into `~/.gemini/`
 3. **Updates** `state.json` to record which profile is now active
 
@@ -102,6 +108,7 @@ From `agy`'s perspective, it just sees valid credentials at the expected locatio
 | Runtime state | `state.json` |
 | Session cache | `antigravity-cli/implicit/` |
 | Windows session | Credential Manager (`gemini:antigravity`) |
+| macOS session | Keychain (`gemini`) & `antigravity-cli/antigravity-oauth-token` |
 
 ### What is shared across all profiles
 
@@ -123,18 +130,28 @@ agym create profile1
 agym create profile2
 ```
 
-**2. Clear existing credentials from Windows Credential Manager**
+**2. Clear existing credentials from Windows Credential Manager / macOS Keychain**
 
 ```bash
+# Windows
 cmdkey /delete:gemini:antigravity
+
+# macOS
+security delete-generic-password -s gemini -a antigravity
 ```
 
-> If you see "CREDENTIAL_NOT_FOUND", that's fine, nothing was stored yet.
+> If you see "CREDENTIAL_NOT_FOUND" (or error 44 on macOS), that's fine, nothing was stored yet.
 
 **3. Set the starting profile**
 
 ```powershell
+# Windows (PowerShell)
 '{"active_profile":"profile1"}' | Set-Content "$env:USERPROFILE\.gemini\profiles\state.json"
+```
+
+```bash
+# macOS
+echo '{"active_profile":"profile1"}' > ~/.gemini/profiles/state.json
 ```
 
 **4. Log in with the first account**
@@ -195,8 +212,15 @@ You should see `gemini:antigravity:<profile-name>` entries for each profile that
 **Resetting everything from scratch**
 
 ```powershell
+# Windows (PowerShell)
 cmdkey /delete:gemini:antigravity
 Remove-Item "$env:USERPROFILE\.gemini\profiles" -Recurse -Force
+```
+
+```bash
+# macOS
+security delete-generic-password -s gemini -a antigravity
+rm -rf ~/.gemini/profiles
 ```
 
 Then start the first-time setup from the beginning.
