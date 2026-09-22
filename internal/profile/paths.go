@@ -35,7 +35,12 @@ func (p *PathResolver) StateFile() string {
 
 // IsolatedFiles returns per-identity authentication files managed by agy.
 func (p *PathResolver) IsolatedFiles() []string {
-	return []string{"oauth_creds.json", "google_accounts.json", "state.json"}
+	return []string{
+		"oauth_creds.json",
+		"google_accounts.json",
+		"state.json",
+		filepath.Join("antigravity-cli", "antigravity-oauth-token"),
+	}
 }
 
 // IsolatedDirs returns session cache directories (.pb files) managed per account by agy.
